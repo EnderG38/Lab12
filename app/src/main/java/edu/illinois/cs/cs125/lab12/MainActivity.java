@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -41,18 +42,21 @@ public final class MainActivity extends AppCompatActivity {
         // Load the main layout for our activity
         setContentView(R.layout.activity_main);
 
+        final ProgressBar progressBar = findViewById(R.id.progressBar);
+
         // Attach the handler to our UI button
         final Button startAPICall = findViewById(R.id.startAPICall);
         startAPICall.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
                 Log.d(TAG, "Start API button clicked");
+                progressBar.setVisibility(View.VISIBLE);
                 startAPICall();
+                progressBar.setVisibility(View.INVISIBLE);
             }
         });
 
         // Make sure that our progress bar isn't spinning and style it a bit
-        ProgressBar progressBar = findViewById(R.id.progressBar);
         progressBar.setVisibility(View.INVISIBLE);
     }
 
@@ -60,22 +64,30 @@ public final class MainActivity extends AppCompatActivity {
      * Make an API call.
      */
     void startAPICall() {
+        final TextView jsonResult = findViewById(R.id.jsonResult);
         try {
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
                     Request.Method.GET,
-                    "",
+                    "https://api.iextrading.com/1.0/stock/GOOG/batch?types=quote",
                     null,
                     new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(final JSONObject response) {
                             Log.d(TAG, response.toString());
+                            try {
+                                String quote = response.get("quote").toString();
+                                jsonResult.setText(quote);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error: JSON Exception");
+                            }
                         }
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(final VolleyError error) {
                             Log.w(TAG, error.toString());
                         }
-                    });
+                    }
+            );
             requestQueue.add(jsonObjectRequest);
         } catch (Exception e) {
             e.printStackTrace();
